@@ -4,7 +4,7 @@ A modern movie and TV discovery, matching, and tracking app built with **React 1
 
 ## Preview
 
-![NOCTIVA Preview](public/preview.png)
+![NOCTIVA Preview]()
 
 ---
 
