@@ -1,0 +1,36 @@
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+
+export default function AuthActionPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    const oobCode = searchParams.get('oobCode');
+
+    if (!mode || !oobCode) {
+      // Missing required params, send home
+      navigate('/', { replace: true });
+      return;
+    }
+
+    // Redirect to the correct feature page based on Firebase mode
+    // We pass `location.search` to forward all parameters (?mode=...&oobCode=...&apiKey=...)
+    if (mode === 'resetPassword') {
+      navigate(`/reset-password${location.search}`, { replace: true });
+    } else if (mode === 'verifyEmail') {
+      navigate(`/verify-email${location.search}`, { replace: true });
+    } else {
+      // Fallback for unhandled modes like 'recoverEmail'
+      navigate('/', { replace: true });
+    }
+  }, [navigate, searchParams, location]);
+
+  return (
+    <div className="flex justify-center items-center min-h-[50vh]">
+      <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+}

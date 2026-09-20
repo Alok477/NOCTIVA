@@ -1,0 +1,31 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|txt|xml|json|woff|woff2|ttf|map)$).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "fullscreen=*, picture-in-picture=*, autoplay=*, encrypted-media=*, screen-wake-lock=*"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ]
+}

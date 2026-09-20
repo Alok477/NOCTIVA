@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/noctiva-logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <!-- Web App / PWA -->
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NOCTIVA" />
+  <link rel="apple-touch-icon" href="/noctiva-logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Primary SEO -->
+  <title>NOCTIVA — Movie Matcher &amp; Tracker</title>
+  <meta name="description"
+    content="NOCTIVA helps you discover movies and TV shows, find personalized matches, track your viewing history, and save favorites." />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <meta name="keywords"
+    content="noctiva, NOCTIVA, movie discovery, TV discovery, movie matcher, watchlist, movie tracker, trending movies, best TV series" />
+  <meta name="author" content="NOCTIVA" />
+  <meta name="application-name" content="NOCTIVA" />
+  <link rel="canonical" href="http://localhost:5173/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NOCTIVA" />
+  <meta property="og:url" content="http://localhost:5173/" />
+  <meta property="og:title" content="NOCTIVA — Movie Matcher &amp; Tracker" />
+  <meta property="og:description"
+    content="Discover movies and TV shows, match titles to your mood, track your viewing history, and keep a personal watchlist with NOCTIVA." />
+  <meta property="og:image" content="/noctiva2.png" />
+  <meta property="og:image:alt" content="NOCTIVA — Movie and TV discovery, matching, and tracking" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NOCTIVA — Movie Matcher &amp; Tracker" />
+  <meta name="twitter:description"
+    content="Discover movies and TV shows, match titles to your mood, track your viewing history, and keep a personal watchlist with NOCTIVA." />
+  <meta name="twitter:image" content="/noctiva2.png" />
+  <meta name="twitter:image:alt" content="NOCTIVA — Movie and TV discovery, matching, and tracking" />
+
+  <!-- JSON-LD: WebSite schema with Sitelinks Searchbox -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "http://localhost:5173/#website",
+      "name": "NOCTIVA",
+      "alternateName": ["NOCTIVA Movie Matcher"],
+      "url": "http://localhost:5173/",
+      "description": "NOCTIVA helps people discover movies and TV shows, find personalized matches, and track their viewing history.",
+      "inLanguage": "en-US",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "http://localhost:5173/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+  <!-- JSON-LD: Organization (Brand Entity) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "http://localhost:5173/#organization",
+      "name": "NOCTIVA",
+      "alternateName": "NOCTIVA Movie Matcher",
+      "url": "http://localhost:5173/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "/noctiva-logo.png",
+        "width": 512,
+        "height": 512
+      },
+      "description": "NOCTIVA is a movie and TV discovery, matching, and tracking app for finding titles and saving favorites.",
+      "sameAs": [
+        "http://localhost:5173"
+      ]
+    }
+    </script>
+
+  <!-- JSON-LD: WebApplication (Product Entity) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "@id": "http://localhost:5173/#webapp",
+      "name": "NOCTIVA",
+      "alternateName": ["NOCTIVA Movie Matcher"],
+      "url": "http://localhost:5173/",
+      "applicationCategory": "EntertainmentApplication",
+      "operatingSystem": "Web, Android, iOS",
+      "browserRequirements": "Requires JavaScript",
+      "description": "NOCTIVA lets you discover movies and TV shows, match titles by mood, track viewing history, and manage your watchlist.",
+      "screenshot": "/noctiva2.png",
+      "featureList": "Movie discovery, TV discovery, Mood matching, Watchlist, Viewing history, Reviews, Search, Genre browsing",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "publisher": {
+        "@id": "http://localhost:5173/#organization"
+      }
+    }
+    </script>
+
+  <meta name='dmca-site-verification' content='NnVjSnA3ZGtacC9vVGJ2K1d6SHQvdz090' />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+const API_KEY = import.meta.env.VITE_TMDB_API;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+export const fetchMoodCandidates = async ({ genreIds, runtime, language, page = 1, signal }) => {
+  const url = new URL(`${BASE_URL}/discover/movie`);
+  url.searchParams.set('api_key', API_KEY);
+  url.searchParams.set('language', 'en-US');
+  url.searchParams.set('include_adult', 'false');
+  url.searchParams.set('sort_by', 'popularity.desc');
+  url.searchParams.set('page', String(page));
+  if (genreIds?.length) url.searchParams.set('with_genres', genreIds.join('|'));
+  url.searchParams.set('watch_region', 'IN');
+  url.searchParams.set('with_watch_monetization_types', 'flatrate|free|ads|rent|buy');
+  url.searchParams.set('vote_count.gte', '25');
+  if (runtime?.min != null) url.searchParams.set('with_runtime.gte', String(runtime.min));
+  if (runtime?.max != null) url.searchParams.set('with_runtime.lte', String(runtime.max));
+  if (language) url.searchParams.set('with_original_language', language);
+
+  const response = await fetch(url, { signal });
+  if (!response.ok) {
+    let message = 'Unable to find matching movies.';
+    try {
+      const data = await response.json();
+      message = data.status_message || message;
+    } catch {
+      // Keep the user-facing fallback when TMDB does not return JSON.
+    }
+    throw new Error(message);
+  }
+  const data = await response.json();
+  return data.results ?? [];
+};
+
+/**
+ * Fetch content by genre — or by custom override params for special categories
+ */
+export const fetchContentByGenre = async (type, genreId, page = 1, overrideParams = null, sortBy = 'popularity.desc', signal) => {
+  try {
+    const validPage = Math.min(Math.max(1, Math.floor(page)), 500);
+    const isSpecialCategory = genreId != null && genreId < 0;
+    const isDonghuaCategory = type === 'tv' && genreId === -4;
+    const isPopularitySort = sortBy === 'popularity.desc';
+    const isMoviePopularitySort = type === 'movie' && isPopularitySort;
+    const isMovieNewestSort = type === 'movie' && sortBy === 'primary_release_date.desc';
+    const isTvNewestSort = type === 'tv' && sortBy === 'first_air_date.desc';
+    const isTvPopularitySort = type === 'tv' && sortBy === 'popularity.desc';
+    const isTvTopRatedSort = type === 'tv' && sortBy.startsWith('vote_average');
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Relax vote floors on deeper pages for special categories so scrolling stays long.
+    const specialTopRatedMinVotes = isDonghuaCategory
+      ? (validPage <= 3 ? 12 : validPage <= 10 ? 6 : 2)
+      : (validPage <= 3 ? 35 : validPage <= 10 ? 20 : 8);
+    const tvPopularMinVotes = isSpecialCategory
+      ? (isDonghuaCategory ? (validPage <= 3 ? 8 : 2) : (validPage <= 3 ? 20 : 8))
+      : (validPage <= 3 ? 80 : validPage <= 10 ? 40 : 20);
+    const moviePopularMinVotes = isSpecialCategory
+      ? (validPage <= 3 ? 25 : 10)
+      : (validPage <= 3 ? 120 : validPage <= 10 ? 60 : 25);
+
+    const url = new URL(`${BASE_URL}/discover/${type}`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('page', validPage);
+    url.searchParams.append('sort_by', sortBy);
+    url.searchParams.append('include_adult', 'false');
+    // Require minimum votes when sorting by rating to avoid low-vote noise
+    if (sortBy.startsWith('vote_average')) {
+      url.searchParams.append('vote_count.gte', isSpecialCategory ? String(specialTopRatedMinVotes) : '300');
+    } else if (!isPopularitySort) {
+      // General floor for Newest/Oldest on generic genres
+      if (!isSpecialCategory) url.searchParams.append('vote_count.gte', '50');
+    }
+
+    // Keep TV top-rated results realistic and avoid sparse lists with invalid/future dates.
+    if (isTvTopRatedSort) {
+      if (!isDonghuaCategory) {
+        url.searchParams.append('include_null_first_air_dates', 'false');
+        url.searchParams.append('first_air_date.lte', today);
+      }
+    }
+
+    // Keep "Newest" practical: only aired shows with real dates and minimum traction.
+    if (isTvNewestSort) {
+      url.searchParams.append('include_null_first_air_dates', 'false');
+      url.searchParams.append('first_air_date.lte', today);
+      url.searchParams.append('vote_count.gte', '50');
+    }
+    
+    if (isMovieNewestSort) {
+      url.searchParams.append('primary_release_date.lte', today);
+      url.searchParams.append('vote_count.gte', '50');
+    }
+
+    // Improve "Most Popular" quality for TV by filtering out low-signal or unaired records.
+    if (isTvPopularitySort) {
+      if (!isDonghuaCategory) {
+        url.searchParams.append('include_null_first_air_dates', 'false');
+        url.searchParams.append('first_air_date.lte', today);
+      }
+      url.searchParams.append('vote_count.gte', String(tvPopularMinVotes));
+    }
+
+    // Improve movie "Most Popular" by excluding future/low-signal releases.
+    if (isMoviePopularitySort) {
+      url.searchParams.append('primary_release_date.lte', today);
+      url.searchParams.append('vote_count.gte', String(moviePopularMinVotes));
+    }
+
+    if (overrideParams) {
+      Object.entries(overrideParams).forEach(([k, v]) => url.searchParams.append(k, v));
+    } else if (genreId) {
+      url.searchParams.append('with_genres', genreId);
+    }
+
+    const response = await fetch(url, { signal });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.status_message || `Failed to fetch ${type}s`);
+    }
+
+    const data = await response.json();
+    const filteredResults = isPopularitySort
+      ? (data.results ?? []).filter((item) => Boolean(item.poster_path))
+      : (data.results ?? []);
+
+    return filteredResults;
+  } catch (error) {
+    const formattedType = typeof type === 'string' && type.length > 0
+      ? type.charAt(0).toUpperCase() + type.slice(1)
+      : 'Content';
+    throw new Error(`${formattedType} fetch failed: ${error.message}`);
+  }
+};
+
+/**
+ * Fetch trending content (movie or tv) for a given time window
+ */
+export const fetchTrending = async (type, page = 1, timeWindow = 'week', signal) => {
+  try {
+    const validPage = Math.min(Math.max(1, Math.floor(page)), 500);
+    const url = new URL(`${BASE_URL}/trending/${type}/${timeWindow}`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('page', validPage);
+
+    const response = await fetch(url, { signal });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.status_message || `Failed to fetch trending ${type}`);
+    }
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    throw new Error(`Trending fetch failed: ${error.message}`);
+  }
+};
+
+/**
+ * Fetch details for a specific movie
+ * @param {number} movieId - The ID of the movie
+ */
+export const fetchMovieDetails = async (movieId) => {
+  try {
+    const url = new URL(`${BASE_URL}/movie/${movieId}`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('language', 'en-US');
+    url.searchParams.append('append_to_response', 'credits');
+
+    let response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch movie details`);
+    }
+
+    try {
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch {
+      // TMDB edge cache can sometimes return corrupted/double-gzipped binary blobs.
+      // Retry with a cache buster to force a fresh JSON response from origin.
+      url.searchParams.set('cb', Date.now());
+      const retryResponse = await fetch(url);
+      if (!retryResponse.ok) throw new Error(`Retry failed`);
+      const retryText = await retryResponse.text();
+      return JSON.parse(retryText);
+    }
+  } catch (error) {
+    throw new Error(`Movie details fetch failed: ${error.message}`);
+  }
+};
+
+export const fetchMovieWatchProviders = async (movieId) => {
+  try {
+    const url = new URL(`${BASE_URL}/movie/${movieId}/watch/providers`);
+    url.searchParams.append('api_key', API_KEY);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch watch providers');
+    }
+
+    return response.json();
+  } catch (error) {
+    throw new Error(`Watch providers fetch failed: ${error.message}`);
+  }
+};
+
+export const fetchSeriesWatchProviders = async (tvId) => {
+  try {
+    const url = new URL(`${BASE_URL}/tv/${tvId}/watch/providers`);
+    url.searchParams.append('api_key', API_KEY);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch watch providers');
+    }
+
+    return response.json();
+  } catch (error) {
+    throw new Error(`TV watch providers fetch failed: ${error.message}`);
+  }
+};
+
+/**
+ * Fetch related movies based on a specific movie ID
+ * @param {number} movieId - The ID of the movie
+ */
+export const fetchRelatedMovies = async (movieId) => {
+  try {
+    const url = new URL(`${BASE_URL}/movie/${movieId}/recommendations`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('language', 'en-US');
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch related movies for ${movieId}`);
+      return [];
+    }
+
+    const relatedData = await response.json();
+    return relatedData.results || [];
+  } catch (error) {
+    console.warn(`Related movies fetch failed: ${error.message}`);
+    return [];
+  }
+};
+
+
+/**
+ * Fetch details for a specific TV series
+ * @param {number} tvId - The ID of the TV series
+ */
+export const fetchSeriesDetails = async (tvId) => {
+  try {
+    const url = new URL(`${BASE_URL}/tv/${tvId}`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('language', 'en-US');
+    url.searchParams.append('append_to_response', 'credits');
+
+    let response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch TV series details`);
+    }
+
+    try {
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch {
+      url.searchParams.set('cb', Date.now());
+      const retryResponse = await fetch(url);
+      if (!retryResponse.ok) throw new Error(`Retry failed`);
+      const retryText = await retryResponse.text();
+      return JSON.parse(retryText);
+    }
+  } catch (error) {
+    throw new Error(`TV series details fetch failed: ${error.message}`);
+  }
+};
+
+
+
+
+/**
+ * Fetch details for all episodes of each season for a specific TV series
+ * @param {number} tvId - The ID of the TV series
+ */
+export const fetchAllEpisodes = async (tvId) => {
+  try {
+    const seriesDetails = await fetchSeriesDetails(tvId);
+    const { seasons } = seriesDetails;
+
+    if (!seasons) return [];
+
+    const seasonDetailsPromises = seasons.map(async (season) => {
+      try {
+        const url = new URL(`${BASE_URL}/tv/${tvId}/season/${season.season_number}`);
+        url.searchParams.append('api_key', API_KEY);
+        url.searchParams.append('language', 'en-US');
+
+        let response = await fetch(url);
+        if (!response.ok) {
+          console.warn(`Failed to fetch season ${season.season_number} for TV ${tvId}`);
+          return null; // Return null instead of throwing to prevent Promise.all from failing
+        }
+
+        try {
+          const text = await response.text();
+          return JSON.parse(text);
+        } catch {
+          url.searchParams.set('cb', Date.now());
+          const retryResponse = await fetch(url);
+          if (!retryResponse.ok) return null;
+          const retryText = await retryResponse.text();
+          return JSON.parse(retryText);
+        }
+      } catch (err) {
+        console.warn(`Error fetching season ${season.season_number} for TV ${tvId}:`, err);
+        return null;
+      }
+    });
+
+    const allSeasonsDetails = await Promise.all(seasonDetailsPromises);
+    return allSeasonsDetails.filter(Boolean); // Filter out any failed seasons
+  } catch (error) {
+    throw new Error(`All episodes fetch failed: ${error.message}`);
+  }
+};
+
+
+
+/**
+ * Fetch related series based on a specific TV series ID
+ * @param {number} tvId - The ID of the TV series
+ */
+export const fetchRelatedSeries = async (tvId) => {
+  try {
+    const url = new URL(`${BASE_URL}/tv/${tvId}/recommendations`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('language', 'en-US');
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch related TV series for ${tvId}`);
+      return [];
+    }
+
+    const relatedSeriesData = await response.json();
+    return relatedSeriesData.results || [];
+  } catch (error) {
+    console.warn(`Related TV series fetch failed: ${error.message}`);
+    return [];
+  }
+};
+
+/**
+ * Fetch actor/crew details and combined credits.
+ * @param {number} personId - The ID of the person
+ */
+export const fetchPersonDetails = async (personId) => {
+  try {
+    const url = new URL(`${BASE_URL}/person/${personId}`);
+    url.searchParams.append('api_key', API_KEY);
+    url.searchParams.append('language', 'en-US');
+    url.searchParams.append('append_to_response', 'combined_credits');
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.status_message || `Failed to fetch person details`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error(`Person fetch failed: ${error.message}`);
+  }
+};

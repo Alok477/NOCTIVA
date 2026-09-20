@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Block private/admin routes
+Disallow: /admin/
+Disallow: /api/
+
+# Explicitly allow Googlebot full access
+User-agent: Googlebot
+Allow: /
+
+Sitemap: http://localhost:5173/sitemap.xml

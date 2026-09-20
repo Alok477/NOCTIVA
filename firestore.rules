@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Reviews are shared content: signed-in users can read them across accounts,
+    // while users may only create reviews under their own identity.
+    match /reviews/{reviewId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly([
+          'userId', 'userName', 'userPhoto', 'mediaId', 'mediaType',
+          'title', 'rating', 'review', 'createdAt'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userName is string
+        && request.resource.data.userName.size() <= 120
+        && (!('userPhoto' in request.resource.data) || request.resource.data.userPhoto == null
+          || request.resource.data.userPhoto is string)
+        && request.resource.data.mediaId is string
+        && request.resource.data.mediaId.size() <= 32
+        && request.resource.data.mediaType in ['movie', 'tv']
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 300
+        && request.resource.data.review is string
+        && request.resource.data.review.size() > 0
+        && request.resource.data.review.size() <= 2000
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.createdAt is timestamp;
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.mediaId == resource.data.mediaId
+        && request.resource.data.mediaType == resource.data.mediaType
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'rating', 'review'
+        ])
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.review is string
+        && request.resource.data.review.size() > 0
+        && request.resource.data.review.size() <= 2000;
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}
