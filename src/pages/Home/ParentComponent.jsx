@@ -129,6 +129,7 @@ function ParentComponent() {
           <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-600">
             <div className="flex items-center gap-3">
               <span className="text-white font-black text-sm">NOC<span className="text-red-500">TIVA</span></span>
+              <span>Developed by - ALOK KUMAR</span>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
