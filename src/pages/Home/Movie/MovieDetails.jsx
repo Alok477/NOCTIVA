@@ -433,8 +433,8 @@ const MovieDetails = ({ movieId: movieIdProp }) => {
         title={`${movie.title}${year ? ` (${year})` : ''} — Movie Details | NOCTIVA`}
         description={
           movie.overview
-            ? `${movie.overview.slice(0, 150).trim()}… Watch ${movie.title} free on NOCTIVA.`
-            : `Watch ${movie.title} free on NOCTIVA.`
+            ? `${movie.overview.slice(0, 150).trim()}… Explore ${movie.title} on NOCTIVA, including trailers, ratings, cast and streaming availability.`
+            : `Explore ${movie.title} on NOCTIVA, including trailers, ratings, cast and streaming availability.`
         }
         image={
           movie.backdrop_path
