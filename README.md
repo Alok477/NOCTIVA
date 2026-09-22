@@ -2,7 +2,7 @@
 
 <img src="./public/noctiva-logo.png" alt="NOCTIVA Logo" width="180"/>
 
-##NOCTIVA
+## NOCTIVA
 
 **Your cinematic destination for discovering movies and TV series.**
 
