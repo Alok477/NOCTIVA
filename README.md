@@ -245,32 +245,6 @@ Potential improvements for future versions include:
 
 ---
 
-##  Adding More Screenshots
-
-```md
-##  Preview
-
-### Home
-![Home](./screenshots/home.png)
-
-### Explore
-![Explore](./screenshots/explore.png)
-
-### Movie Details
-![Details](./screenshots/details.png)
-
-### Series Details
-![Series](./screenshots/series.png)
-
-### Search
-![Search](./screenshots/search.png)
-
-### Mobile
-![Mobile](./screenshots/mobile.png)
-```
-
----
-
 ## 👨‍💻 Author
 
 **ALook**
