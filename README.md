@@ -95,27 +95,28 @@ NOCTIVA/
 
 ###  Home Page
 
-```md
-![NOCTIVA Home Page](./screenshots/home.png)
-```
+<img src="./screenshots/home.png" alt="NOCTIVA Home" />
+<img src="./screenshots/home1.png" alt="NOCTIVA Home1" />
+<img src="./screenshots/home2.png" alt="NOCTIVA Home2" />
 
 ### 🎬 Movie / Series Details
 
-```md
 ![Movie Details](./screenshots/details.png)
-```
 
-###  Search & Discovery
+### Search & Discovery
 
-```md
-![Search](./screenshots/search.png)
-```
+<img src="./screenshots/mood.png" alt="Mood Matcher" />
+<img src="./screenshots/mood1.png" alt="Mood Matcher1" />
+<img src="./screenshots/search.png" alt="Search" />
 
-###  Mobile View
+### Mobile View
 
-```md
-![NOCTIVA Mobile](./screenshots/mobile.png)
-```
+<p align="center">
+  <img src="./screenshots/mobile.png" width="24%" alt="NOCTIVA Mobile" />
+  <img src="./screenshots/mobile1.png" width="24%" alt="NOCTIVA Mobile 1" />
+  <img src="./screenshots/mobile2.png" width="24%" alt="NOCTIVA Mood Matcher" />
+  <img src="./screenshots/mobile_mood.png" width="24%" alt="NOCTIVA Mood Mobile" />
+</p>
 
 ---
 
